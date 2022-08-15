@@ -111,7 +111,7 @@ exit_error() {
     fi
     shift
     set_console_normal
-    
+
     for line in "$@"
     do
         info $line
@@ -1768,7 +1768,7 @@ compose_action() {
 """
             ;;
         up)
-            getopt_args="${getopt_args},remove-orphans,attach,quiet-pull,force-recreate,no-recreate,no-start,timeout:,rollover"
+            getopt_args="${getopt_args},remove-orphans,attach,quiet-pull,force-recreate,no-recreate,no-start,build,timeout:,rollover"
             opt_detach="-d"
             getopt_allow_tailargs="y"
             help_text="""
@@ -1779,6 +1779,8 @@ compose_action() {
              the configuration files.
   ${cyan_c}--quiet-pull${no_c}
              Pull without printing progress information.
+  ${cyan_c}--build${no_c}
+             Build images before starting containers.
   ${cyan_c}--force-recreate${no_c}
              Recreate containers even if their configuration
              and image haven't changed.
@@ -1797,6 +1799,23 @@ compose_action() {
              brings each node up, one by one.
              Continues iterations only if the launched services / nodes
              are in healthy state.
+"""
+            help_tailargs="[SERVICE] ..."
+            ;;
+     build)
+            getopt_args="${getopt_args},no-cache,no-rm,compress,build-arg:,pull,quiet"
+            help_text="""
+  ${cyan_c}SERVICE${no_c}    List of services to target for the action.
+  ${cyan_c}--no-cache${no_c}   Do not use cache when building the image.
+  ${cyan_c}--no-rm${no_c}
+             Do not remove intermediate containers after a successful build.
+  ${cyan_c}--compress${no_c}
+             Compress the build context using gzip.
+  ${cyan_c}--build-arg key=val${no_c}
+             Set build-time variables for services.
+  ${cyan_c}--pull${no_c}
+             Always attempt to pull a newer version of the image.
+  ${cyan_c}--quiet${no_c} Don't print anything to STDOUT.
 """
             help_tailargs="[SERVICE] ..."
             ;;
@@ -2306,7 +2325,7 @@ version: '${project_compose_version}'
     do
         if [ -z "$required_services" ] || [ -n "${matched_required_services_by_node[$node_id]}" ]
         then
-            if [ ${command} == "up" ]
+            if [ ${command} == "up" || ${command} == "build" ]
             then
                 if [ -z ${tar_done:-} ]
                 then
